@@ -1,6 +1,6 @@
 <?php
   
-/* LOAD THE PARENT THEMEs */
+/* LOAD THE PARENT THEME (ELEMIN) */
 
 function theme_enqueue_styles() {
 
