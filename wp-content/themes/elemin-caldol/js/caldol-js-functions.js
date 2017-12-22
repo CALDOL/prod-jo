@@ -25,7 +25,7 @@ $j_caldol('#tuesday-tools-help').toggle();
 
 
 
-$j_caldol('label[for="signup_username"]').append("<br/><span style='font-weight: normal;'>(This is the name that will show on all posts. Members will be able to see your real name by clicking on it.)</span>");
+$j_caldol('label[for="signup_username"]').append("<br/><span style='font-weight: normal;'>(This is the name that will show on all posts.  We discourage the use of your rank within your username as the forum norm is that we don't use rank.  Members will be able to see your real name by clicking on it.)</span>");
 
 $j_caldol('label[for="signup_email"]').append("<br/><span style='font-weight: normal;'>(This is the email address to which all direct messages, email notifications, and newsletters will be sent.)</span>");
 

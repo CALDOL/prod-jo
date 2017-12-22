@@ -1,6 +1,14 @@
 <?php
 
 
+add_action( 'bp_pre_user_query', 'caldol_bp_pre_user_query' );
+
+function caldol_bp_pre_user_query($BP_User_Query )
+{
+	die("got here child");
+	var_dump($BP_User_Query);
+}
+
 
 add_filter( 'bbp_is_site_public', 'caldol_enable_bbp_activity', 10, 2);
 

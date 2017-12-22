@@ -89,6 +89,8 @@ function jo_custom_admin_css() {
   </style>';
 }
 
+
+
 add_shortcode('read2lead-book', 'jo_read2lead_book_data_shortcode');
 add_shortcode('jo-read2lead-book-data', 'jo_read2lead_book_data_shortcode');
 
@@ -111,23 +113,28 @@ function jo_read2lead_book_data_shortcode($atts=[], $content=null){
 
 
 // Filter the forum from which tagged discussions should be taken
-add_shortcode('jo-forum-topics-of-tag', 'jo_topics_of_tag_shortcode');
+add_shortcode( 'jo-forum-topics-of-tag', 'jo_topics_of_tag_shortcode' );
 
-function jo_topics_of_tag_shortcode($atts, $content=null) {
+function jo_topics_of_tag_shortcode( $atts, $content = null ) {
 
-    global $BBP_Shortcodes;
+	global $BBP_Shortcodes;
 
-    $forum_id = $atts['forum-id'];
-    $topic_id = $atts['id'];
-    $newargs = array(5, $topic_id);
+	$forum_id = $atts['forum-id'];
+	$topic_id = $atts['id'];
+	$newargs  = array( 5, $topic_id );
 
-    //echo "<pre>" . print_r($GLOBALS) . "</pre>";
+	//echo "<pre>" . print_r($GLOBALS) . "</pre>";
 
 	//$defaults = array("forum_id" => 80);
 
-	add_filter( 'bbp_after_has_topics_parse_args', function($r) use ($forum_id){$r['post_parent'] = $forum_id;  return $r;});
-	$content = (new BBP_Shortcodes())->display_topics_of_tag( array(
-		'id'       => $topic_id
+	add_filter( 'bbp_after_has_topics_parse_args',
+		function ( $r ) use ( $forum_id ) {
+			$r['post_parent'] = $forum_id;
+
+			return $r;
+		} );
+	$content = ( new BBP_Shortcodes() )->display_topics_of_tag( array(
+		'id' => $topic_id
 	) );
 
 
@@ -148,6 +155,50 @@ function jo_track_user_login_history($id,$user) {
 	update_user_meta($user->ID,'_user_login_history',$tracking);
 }
 add_action('wp_login','jo_track_user_login_history',10,2);
+
+
+function caldol_show_login_history($atts){
+
+
+    $returnValue = 'User Login History: ';
+    extract(shortcode_atts(array(
+        'userid' => -1
+    ), $atts));
+    //$userID = $atts['userid'] != null?$atts['userid']:-1;
+
+
+    if($userid != -1) {
+
+        $hasloggedin = (int) get_user_meta($userid, 'pw_new_user_approve_has_signed_in', true);
+        var_dump($hasloggedin);
+
+        $tracking = get_user_meta($userid, '_user_login_history', true);
+        //var_dump($atts);
+
+        if ($tracking != "" || $tracking . length > 0) {
+            $returnValue .= "<select>";
+            foreach (array_reverse($tracking) as $loginDate) {
+
+                $actualSeconds = ((int)$loginDate);
+
+                $returnValue .= '<option>' . date("d M y H:i", $actualSeconds) . '</option>';
+            }
+        $returnValue .= "</select>";
+        }
+        else{
+            $returnValue .= "No history available";
+        }
+
+    }
+    else{
+        $returnValue .= "An invalid user id was provided ($userid)";
+    }
+
+    return $returnValue;
+}
+
+add_shortcode('user-history', 'caldol_show_login_history');
+
 
 
 /* ADD PAGE VIEW COUNT TO PAGES FOR ONLY THE CALDOL USER */
@@ -4062,7 +4113,7 @@ function update_extra_profile_fields($user_id) {
 		$field->user_id  = $user_id;
 		$field->value    = maybe_serialize( $val);
 		//if($fieldInfo[0] == 11)
-		var_dump($fieldList);
+		//var_dump($fieldList);
 //die();
 		$field->save();
 		}

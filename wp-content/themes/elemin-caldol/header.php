@@ -123,20 +123,20 @@ if (in_array($user_ID, $os)) {
 		  echo "<!-- setpostview :" . get_the_ID() . ": -->";
 	        setPostViews(get_the_ID());
         }
-		?>
-	  
-	  <?php
-/*
-		$tracking = get_user_meta(get_current_user_id(),'_user_login_history',true);
-		//var_dump($tracking);
-		if($tracking != "" || $tracking.length > 0){
-		    foreach ($tracking as $loginDate){
 
-				$actualSeconds = ( (int)$loginDate);
 
-				echo date("d/m/Y H:i", $actualSeconds) . '<br/>';
-			}
-		}
-		*/
+
 		?>
+      <?php
+
+      if(current_user_can('manage_options')){
+      if (bp_is_user() && bbp_get_displayed_user_id() != null) {
+
+          //var_dump(bbp_get_displayed_user_id());
+          echo do_shortcode("[user-history userid=" . bbp_get_displayed_user_id() . "]");
+
+      }
+      }
+      ?>
+
     <?php themify_layout_before(); //hook ?>

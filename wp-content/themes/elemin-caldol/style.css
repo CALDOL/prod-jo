@@ -194,9 +194,9 @@ margin: 0 auto;
 }
 
 #menu-item-1861::before {
-	content: "- NEW Options -";
+/*	content: "- NEW Options -";
   color: red; font-weight: normal; font-size: 1.2em;font-variant: all-small-caps;
-
+*/
 
 }
 

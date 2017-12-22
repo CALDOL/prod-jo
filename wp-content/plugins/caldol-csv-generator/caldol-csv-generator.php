@@ -9,6 +9,28 @@ Author: Thomas O. Morel
 Author URI: https://jo.army.mil
 */
 
+
+/* USED TO CLONE THE AUTHOR ROLE TO A NEW ROLE
+   NAMED Author-no-email SO THAT MEMBERS THAT
+   DON'T WANT TO BE EMAILED CAN OPT OUT.
+
+  THIS METHOD SHOULD ONLY BE RUN ONCE!
+
+*/
+
+/*
+add_action('init', 'CreatecloneRoleAuthor');
+function CreatecloneRoleAuthor()
+{
+    global $wp_roles;
+    if ( ! isset( $wp_roles ) )
+        $wp_roles = new WP_Roles();
+
+    $atr = $wp_roles->get_role('Author');
+    $wp_roles->add_role('author-no-email', 'Author-no-email', $atr->capabilities);
+}
+ *
+ */
 // Create the shortcode
 add_shortcode( 'display-csv', 'caldol_generate_csv_shortcode' );
 add_shortcode( 'display-branch', 'get_branch_dropdown' );
@@ -180,23 +202,41 @@ function get_jo_member_list() {
 	$member_list = $wpdb->get_results(
 		"
 	SELECT
-
-  user_email, user_nicename
+  ID, user_email, user_nicename
 FROM jo_wp_prod_users u join jo_wp_prod_usermeta um on user_id=u.ID
-  where um.meta_key='pw_user_status' and um.meta_value = 'approved'
+  where um.meta_key='pw_user_status' and um.meta_value = 'approved' 
 ORDER BY user_email
 	"
 	);
 
-	$summary = "TOTAL of " . $wpdb->num_rows. " approved members were found";
-	$returnList .= $summary . "\n\n";
+    $validatedMembers = $totalMembers = $wpdb->num_rows;
+    foreach ( $member_list as $member ) {
+        $user_meta=get_userdata($member->ID);
+        $user_roles=$user_meta->roles;
+        if (in_array("author-no-email", $user_roles)){
+            $validatedMembers--;
 
-	foreach ( $member_list as $member ) {
-		$returnList .= $member->user_nicename . "," . $member->user_email . "\n";
-	}
+        }
+        else {
+            $returnList .= $member->user_nicename . "," . $member->user_email . "\n";
+        }
+    }
+    $noEmailMemberTotal = $totalMembers - $validatedMembers;
+    $summary = "\nThere are " . $totalMembers . " approved members in the JO Forum.\n\n";
+    $summary .= "This ALL MEMBERS REPORT has a total of " . $validatedMembers . " members on it.\n\n";
+if($noEmailMemberTotal > 0) {
+	$summary .= "Note that " . ($noEmailMemberTotal == 1?'1 member is ':$noEmailMemberTotal . ' members are ' ) . "on the NO EMAIL list and NOT included in this report.\n\n";
+}
+else{
+    $summary .= "There are no members on the NO EMAIL list.\n\n";
+}
+
+	$summary .= $returnList;
+
+
 
 	//echo $wpdb->num_rows;
-	return $returnList;
+	return $summary;
 
 }
 
@@ -247,12 +287,12 @@ function get_custom_jo_member_list( $incomingBranch, $incomingYeargroup, $incomi
 			$mainQuery = "select yg.value,
        br.value,
        cp.value,
+       users.ID,
        users.user_login,
        users.user_email,
        users.user_nicename
   from jo_wp_prod_users users join jo_wp_prod_usermeta um on um.user_id=users.ID " . $branch_join . " " . $yeargroup_join . " " . $currentpost_join ." 
-  where um.meta_key='pw_user_status' and um.meta_value = 'approved' AND " . $branch_where . " AND " . $yeargroup_where . " AND " . $currentpost_where .  "
-  order by users.user_email desc";
+  where um.meta_key='pw_user_status' and um.meta_value = 'approved' AND " . $branch_where . " AND " . $yeargroup_where . " AND " . $currentpost_where .  "  order by users.user_email desc";
 
 	$member_list = $wpdb->get_results($mainQuery);
 
@@ -288,23 +328,62 @@ function get_custom_jo_member_list( $incomingBranch, $incomingYeargroup, $incomi
 	order by users.user_email desc
 		"
 		);*/
-
-		$summary = "TOTAL of " . $wpdb->num_rows
-		           . " Members with the following parameters:\n";
-		$summary .= "\nYG: ";
-		$summary .= empty( $yeargroup ) ? 'ALL' : $yeargroup;
-		$summary .= "\nBR: ";
-		$summary .= empty( $branch ) ? 'ALL' : $branch;
-		$summary .= "\nCurrent Post: ";
-		$summary .= empty( $currentpost ) ? 'ALL' : $currentpost;
-		$summary .= "\n\n";
+        $validatedMembers = $totalMembers = $wpdb->num_rows;
 
 
-		$returnList .= $summary;
+        foreach ( $member_list as $member ) {
+            $user_meta=get_userdata($member->ID);
+            $user_roles=$user_meta->roles;
+            if (in_array("author-no-email", $user_roles)) {
+                $validatedMembers--;
 
-		foreach ( $member_list as $member ) {
-			$returnList .= $member->user_nicename . "," . $member->user_email . "\n";
+            }
+            else {
+                $returnList .= $member->user_nicename . "," . $member->user_email . "\n";
+                //var_dump($member);
+                //die("died");
+            }
+        }
+        $noEmailMemberTotal = $totalMembers - $validatedMembers;
+
+        $summary = "\nThis CUSTOM MEMBERS REPORT has a total of " . $validatedMembers . " members on it.\n";
+        $summary .= "\nThere are " . $totalMembers . " approved members in the JO Forum that meet your parameters of:";
+        $summary .= "\nYG: ";
+        $summary .= empty( $yeargroup ) ? 'ALL' : $yeargroup;
+        $summary .= "\nBR: ";
+        $summary .= empty( $branch ) ? 'ALL' : $branch;
+        $summary .= "\nCurrent Post: ";
+        $summary .= empty( $currentpost ) ? 'ALL' : $currentpost;
+        $summary .= "\n\n";
+
+        if($noEmailMemberTotal > 0) {
+
+            $summary .= "Note that " . ($noEmailMemberTotal == 1 ? '1 member is ' : $noEmailMemberTotal . ' members are ') . "on the NO EMAIL list and NOT included in this report.\n\n";
+        }
+        else{
+            $summary .= "There are no members on the NO EMAIL list.\n\n";
 		}
+
+
+		$summary .= $returnList;
+		//$returnList .= $summary;
+
+		/* foreach ( $member_list as $member ) {
+            $user_meta=get_userdata($member->ID);
+            $user_roles=$user_meta->roles;
+            if (in_array("author-no-email", $user_roles)){
+            	continue;
+
+			}
+			else {
+                $returnList .= $member->user_nicename . "," . $member->user_email . "\n";
+                //var_dump($member);
+                //die("died");
+            }
+		}
+		*/
+
+
 
 	}
 
@@ -313,8 +392,8 @@ function get_custom_jo_member_list( $incomingBranch, $incomingYeargroup, $incomi
 	//$returnList .= $wpdb->last_query;
 
 
-	return $returnList;
-
+	//return $returnList;
+	return $summary;
 }
 
 ?>
